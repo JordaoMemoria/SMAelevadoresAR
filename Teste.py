@@ -1,9 +1,4 @@
-import numpy as np
-import matplotlib.pyplot as plt
-Y = np.random.poisson(0.5, 86400)
-X = []
+from random import randint
 
-print(Y)
-
-plt.hist(Y,histtype='stepfilled')
-plt.show()
+for i in range(20):
+    print(i)
