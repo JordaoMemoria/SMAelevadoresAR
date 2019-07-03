@@ -2,36 +2,75 @@ from FloorsModel import FloorsModel
 from PoissonGenerator import PoissonGenerator
 from ControllerAgent import ControllerAgent
 from Person import Person
+import matplotlib.pyplot as plt
 
-env = FloorsModel(3,6,0.2)
-i = 0
-while(
+Ys = []
+segs = 1800
+lamb = 0.2
+elevators = 3
+floors = 6
+pg = PoissonGenerator(lamb, segs)
+for i in range(30):
+    env = FloorsModel(elevators,floors,pg)
+    i = 0
+    while(
         len(env.schedule.agents[-1].people) > 0 or
-        i < 86400 or
+        i < segs or
         len(env.schedule.agents[0].peopleToLeave) > 0 or
         len(env.schedule.agents[1].peopleToLeave) > 0 or
         len(env.schedule.agents[2].peopleToLeave) > 0
-):
-#while(i < 1000):
-    print("t =",i)
-    env.step()
-    print("------")
-    i += 1
+    ):
+    #while(i < 1000):
+        #print("t =",i)
+        env.step()
+        #print("------")
+        i += 1
 
-print(env.schedule.agents[0].kb.Q)
-print(env.schedule.agents[0].kb.Nsa)
+    # print(env.schedule.agents[0].kb.Q)
+    # print(env.schedule.agents[0].kb.Nsa)
+    # print(env.timePeople)
+    # print(len(env.timePeople))
+    nGroup = int(segs*lamb/10)
+    chunks = [env.timePeople[x:x+nGroup] for x in range(0,len(env.timePeople),nGroup)]
+    Y = []
+    for c in chunks:
+        Y.append(sum(c)/len(c))
+    print(Y)
+    Ys.append(Y)
+    pg.reset()
+finalY = []
+print(len(Ys))
+for i in Ys:
+    print(len(i))
 
-for index, row in env.schedule.agents[0].kb.Q.iterrows():
-    action = None
-    value = None
-    for i in range(len(row)):
-        if value == None:
-            value = row[i]
-            action = row.index[i]
-        elif row[i] > value:
-            value = row[i]
-            action = row.index[i]
-    print(index, action)
+for i in range(len(Ys[0])):
+    sumI = 0
+    for j in range(len(Ys)):
+        sumI += Ys[j][i]
+    finalY.append(sumI/len(Ys))
+X = []
+for x in range(len(finalY)):
+    X.append(x+1)
+print(Y)
+plt.plot(X,finalY)
+plt.ylim((0,max(finalY)+10))
+plt.xlabel("Amostragem agrupada por "+str(nGroup)+" pessoas")
+plt.ylabel("Tempo médio em segundos")
+plt.show()
+
+
+
+# for index, row in env.schedule.agents[0].kb.Q.iterrows():
+#     action = None
+#     value = None
+#     for i in range(len(row)):
+#         if value == None:
+#             value = row[i]
+#             action = row.index[i]
+#         elif row[i] > value:
+#             value = row[i]
+#             action = row.index[i]
+#     print(index, action)
 
 
 

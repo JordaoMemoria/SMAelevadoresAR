@@ -8,7 +8,7 @@ from KnowledgeBase import KnowledgeBase
 from ElevatorAgent import State
 
 class FloorsModel(Model):
-    def __init__(self, nElevators, nFloors, lamb):
+    def __init__(self, nElevators, nFloors, pg):
         self.nElevators = nElevators
         self.nFloors = nFloors
         self.grid = MultiGrid(1, nFloors, False)
@@ -18,13 +18,14 @@ class FloorsModel(Model):
         self.ACTIONS = ['Up', 'Down', 'Close', 'Open', 'Keep']
         kb = KnowledgeBase(actions=self.ACTIONS, states=self.STATES)
 
+        self.timePeople = []
+
         for i in range(self.nElevators):
             a = ElevatorAgent(i, self, kb)
             self.schedule.add(a)
             y = self.random.randrange(self.grid.height)
             self.grid.place_agent(a, (0, y))
         self.schedule.step()
-        pg = PoissonGenerator(lamb, 86400)
         self.controllerAgent = ControllerAgent(i+1, self, self.schedule.agents, pg)
         self.schedule.add(self.controllerAgent)
 
@@ -47,51 +48,33 @@ class FloorsModel(Model):
         return states,realStates
 
     def getPerception(self, s, a, agent):
-        #To start a agent
+        # To start a agent
         if s == None:
-            return State(agent.pos[1],False,self.nFloors), 0
-        #To finish a mission
-        elif s.floor == s.mission and s.doorOpened == False and a == 'Open':
-            return State(s.floor, True, s.mission),1
+            return State(agent.pos[1], False, self.nFloors), 0
+
+        if s.floor == s.mission and s.doorOpened == True:
+            agent.peopleToLeave = agent.peopleToPickUp
+            agent.peopleToPickUp = []
+            newMission = self.getNewMission(agent)
+            return State(s.floor, True, newMission), 1
         #To receive or leave people on missions
-        elif s.floor == s.mission and s.doorOpened == True:
+        elif s.floor == s.mission and s.doorOpened == False and a == 'Open':
             #If picking people
             if len(agent.peopleToPickUp) > 0 and len(agent.peopleToLeave) == 0:
                 agent.peopleToLeave = agent.peopleToPickUp
                 agent.peopleToPickUp = []
                 newMission = self.getNewMission(agent)
-                if a == 'Up' or a == 'Down':
-                    return State(s.floor, s.doorOpened, newMission), -1
-                elif a == 'Keep' or a == 'Open':
-                    return State(s.floor, s.doorOpened, newMission), -0.04
-                elif a == 'Close':
-                    return State(s.floor, False, newMission), self.getRewardByDist(s.floor, newMission)
+                return State(s.floor, True, newMission), 1
             #If leaving people
             elif len(agent.peopleToPickUp) == 0 and len(agent.peopleToLeave) > 0:
                 pByFloor = self.getPeopleByGoTo(agent, s.floor)
+                self.saveTimeByPeople(pByFloor)
                 agent.peopleToLeave = [n for n in agent.peopleToLeave if n not in pByFloor]
                 newMission = self.getNewMission(agent)
                 if newMission == None:
-                    if a == 'Up' or a == 'Down':
-                        return State(s.floor, s.doorOpened, self.nFloors), -1
-                    elif a == 'Open' or a == 'Close':
-                        return State(s.floor, s.doorOpened, self.nFloors), -0.04
-                    elif a == 'Keep':
-                        return State(s.floor, s.doorOpened, self.nFloors), 1
+                    return State(s.floor, True, self.nFloors), 1
                 else:
-                    if a == 'Up' or a == 'Down':
-                        return State(s.floor, s.doorOpened, newMission), -1
-                    elif a == 'Keep' or a == 'Open':
-                        return State(s.floor, s.doorOpened, newMission), -0.04
-                    elif a == 'Close':
-                        return State(s.floor, False, newMission), self.getRewardByDist(s.floor, newMission)
-            elif len(agent.peopleToPickUp) == 0 and len(agent.peopleToLeave) == 0:
-                if a == 'Up' or a == 'Down':
-                    return State(s.floor, s.doorOpened, self.nFloors), -1
-                elif a == 'Open' or a == 'Close':
-                    return State(s.floor, s.doorOpened, self.nFloors), -0.04
-                elif a == 'Keep':
-                    return State(s.floor, s.doorOpened, self.nFloors), 1
+                    return State(s.floor, True, newMission), 1
         #To teach not to move with door opened
         elif s.doorOpened == True and (a == 'Up' or a == 'Down'):
             return State(s.floor, True, s.mission),-1
@@ -149,3 +132,7 @@ class FloorsModel(Model):
         d = abs(floor - goTo)
         r = 0.8 - (d / (self.nFloors + 1))
         return r
+
+    def saveTimeByPeople(self,people):
+        for p in people:
+            self.timePeople.append(p.t)

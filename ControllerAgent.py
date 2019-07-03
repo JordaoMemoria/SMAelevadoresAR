@@ -19,8 +19,9 @@ class ControllerAgent(Agent):
         print("")
 
     def step(self):
-        print("Controller{")
-        print(len(self.people))
+        self.updateTimePeople()
+        #print("Controller{")
+        #print(len(self.people))
         # For the case that people are already waiting busy elevators
         for newP in self.peopleWaitingOnFloors:
             missionToAgent = self.getBestElevatorAgent(newP)
@@ -37,14 +38,14 @@ class ControllerAgent(Agent):
         floorsMission = list(dict.fromkeys(floorsMission))
         # FloorsMisson is for the case that more than one person arrives on the same floor resuting in just one mission
         for newP in floorsMission:
-            print("Some person(s) arrives on floor",newP)
+        #    print("Some person(s) arrives on floor",newP)
             missionToAgent = self.getBestElevatorAgent(newP)
             self.tryToSendMission(missionToAgent, newP)
-        print("}")
+        #print("}")
 
     def tryToSendMission(self,missionToAgent, floor):
         if missionToAgent != None:
-            print("Mission to elevator", missionToAgent.unique_id)
+        #    print("Mission to elevator", missionToAgent.unique_id)
             missionToAgent.s.mission = floor
             peopleByFloor = self.getPeopleByFloor(floor)
             self.people = [n for n in self.people if n not in peopleByFloor]
@@ -86,3 +87,7 @@ class ControllerAgent(Agent):
             if p.floor == floor:
                 peopleByFloor.append(p)
         return peopleByFloor
+
+    def updateTimePeople(self):
+        for p in self.people:
+            p.wait(1)

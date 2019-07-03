@@ -35,6 +35,7 @@ class ElevatorAgent(Agent):
             print(str(p), end='')
         print("")
     def step(self):
+        self.updateTimePeople()
         if self.acting:
             self.acting = False
         else:
@@ -42,14 +43,14 @@ class ElevatorAgent(Agent):
             self.acting = True
 
     def act(self):
-        if self.a != None:
-            print("Elevador", self.unique_id, str(self.s), self.a,end=" | ")
+        #if self.a != None:
+        #    print("Elevador", self.unique_id, str(self.s), self.a,end=" | ")
         sl,rl = self.model.getPerception(self.s,self.a,self)
-        print(str(sl),rl)
-        self.showAllPeople()
+        #print(str(sl),rl)
+        #self.showAllPeople()
         if self.s != None:
             self.kb.Nsa.at[str(self.s),self.a] += 1
-            self.kb.Q.at[str(self.s),self.a] += 0.99*(rl + 0.5*self.getMaxVariantionValue(sl))
+            self.kb.Q.at[str(self.s),self.a] += 0.9*(rl + 0.1*self.getMaxVariantionValue(sl))
             #self.kb.Q.at[str(self.s), self.a] = rl
         self.s, self.a, self.r = sl, self.getAction(sl,1), rl
 
@@ -81,3 +82,10 @@ class ElevatorAgent(Agent):
             return 1
         else:
             return self.kb.Q.at[str(s), a]
+
+
+    def updateTimePeople(self):
+        for p in self.peopleToPickUp:
+            p.wait(1)
+        for p in self.peopleToLeave:
+            p.wait(1)
