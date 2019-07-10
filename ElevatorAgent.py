@@ -49,38 +49,61 @@ class ElevatorAgent(Agent):
         sl,rl = self.model.getPerception(self.unique_id)
         print("----------------------------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Agente",self.unique_id,rl)
         if self.s != None:
-            newQsa = self.Q(self.s,self.a) + 0.9*(rl + 0.9*self.getMaxVariantionValue(sl))
+            newQsa = self.Q(self.s,self.a, button) + 0.9*(rl + 0.9*self.getMaxVariantionValue(sl, button))
 
         self.s = deepcopy(sl)
-        self.a = self.getAction(sl)
+        self.a = self.getAction(sl, button)
         self.model.newAction(self.a,self,button)
 
-    def getMaxVariantionValue(self,sl):
+    def getMaxVariantionValue(self,sl, button):
         value = None
         for a in self.model.ACTIONS:
-            v = self.Q(sl,a) - self.Q(self.s,self.a)
+            v = self.Q(sl,a, button) - self.Q(self.s,self.a, button)
             if value == None:
                 value = v
             elif v > value:
                 value = v
         return value
 
-    def Q(self,s,a):
+    def Q(self,s,a, button):
+        if a == 'Go':
+            av = 1
+        elif a == 'Ignore':
+            av = -1
+
+        D = self.getD(s, button)
+
+        return self.w0 + self.w1*D*av
+
+    def getD(self,s, button):
+        ds = [1,1,1]
+        print(button, self.getFloorAndSenseOfButton(button))
+        for i in range(self.s.GO.shape[1]):
+            a = self.model.schedule.agents[i]
+
         return 0
 
-    def getAction(self, sl):
+    def getFloorAndSenseOfButton(self, button):
+        floor = int((button+1)/2)
+        if ((button+1)/2)%1 == 0:
+            sense = -1
+        else:
+            sense = 1
+        return (floor, sense)
+
+    def getAction(self, sl, button):
 
         default_action = randint(0, len(self.model.ACTIONS)-1)
         #default_action = 0
         action = self.model.ACTIONS[default_action]
-        action_value = self.Q(sl, action)
+        action_value = self.Q(sl, action, button)
 
         e = randint(1,10)
         if e < 3:
             return action
         else:
             for a in self.model.ACTIONS:
-                value = self.Q(sl, a)
+                value = self.Q(sl, a, button)
                 if action_value < value:
                     action_value = value
                     action = a
