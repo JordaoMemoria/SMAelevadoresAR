@@ -10,3 +10,6 @@ class Person:
 
     def __str__(self):
         return '['+str(self.floor)+str(self.goTo)+']'
+
+    def getReward(self):
+        return ((self.floor - self.goTo)**2)/self.t

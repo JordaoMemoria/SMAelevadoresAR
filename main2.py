@@ -3,8 +3,8 @@ from FloorsModel import FloorsModel
 
 Ys = []
 segs = 1800
-lamb = 0.5
-elevators = 3
+lamb = 0.2
+elevators = 2
 floors = 6
 pg = PoissonGenerator(lamb, segs)
 env = FloorsModel(elevators,floors,pg)

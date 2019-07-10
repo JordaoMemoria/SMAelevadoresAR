@@ -13,15 +13,16 @@ class ElevatorAgent(Agent):
 
         self.s = None
         self.a = None
-        self.r = None
 
         self.w0 = 0.1
         self.w1 = 0.1
 
-    def initLastState(self):
-        self.lastState = deepcopy(self.model.currentState)
+        self.floorsToGo = []
+        self.doorsOpened = False
 
-    def showAllPeople(self):
+        self.idButtons = []
+
+    def showPeople(self):
         print("People inside: ", end='')
         for p in self.peopleInside:
             print(str(p), end='')
@@ -34,21 +35,23 @@ class ElevatorAgent(Agent):
     def step(self):
         self.updateTimePeople()
         if self.someNewButtonWasPressed():
-            for i in range(len(self.lastState.buttons)):
-                if self.lastState.buttons[i] != self.model.currentState.buttons[i]:
-                    self.qlearningAction(i)
+            for i in self.idButtons:
+                self.qlearningAction(i)
+            self.idButtons = []
 
     def someNewButtonWasPressed(self):
-        if self.lastState.buttons == self.model.currentState.buttons:
-            return False
-        else:
+        if len(self.idButtons) > 0:
             return True
+        else:
+            return False
 
     def qlearningAction(self,button):
-        sl,rl = self.model.getPerception()
-        # if self.s != None:
-        #     newQsa = self.Q(self.s,self.a) + 0.9*(r + 0.9*self.getMaxVariantionValue(sl))
-        self.s, self.r = deepcopy(sl), rl
+        sl,rl = self.model.getPerception(self.unique_id)
+        print("----------------------------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Agente",self.unique_id,rl)
+        if self.s != None:
+            newQsa = self.Q(self.s,self.a) + 0.9*(rl + 0.9*self.getMaxVariantionValue(sl))
+
+        self.s = deepcopy(sl)
         self.a = self.getAction(sl)
         self.model.newAction(self.a,self,button)
 
@@ -68,11 +71,12 @@ class ElevatorAgent(Agent):
     def getAction(self, sl):
 
         default_action = randint(0, len(self.model.ACTIONS)-1)
+        #default_action = 0
         action = self.model.ACTIONS[default_action]
         action_value = self.Q(sl, action)
 
         e = randint(1,10)
-        if e < 0:
+        if e < 3:
             return action
         else:
             for a in self.model.ACTIONS:

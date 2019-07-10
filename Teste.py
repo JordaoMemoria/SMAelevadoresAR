@@ -1,5 +1,6 @@
 from random import randint
 
-for i in range(10):
-    n = randint(1,10)
-    print(n)
+a = [1,2,3,4,5]
+print(a)
+a.remove(5)
+print(a)
