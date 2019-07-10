@@ -1,6 +1,6 @@
 from FloorsModel import FloorsModel
 from PoissonGenerator import PoissonGenerator
-from ControllerAgent import ControllerAgent
+from PeopleSimulator import ControllerAgent
 from Person import Person
 import matplotlib.pyplot as plt
 
