@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 Ys = []
 segs = 3600
-lamb = 0.1
+lamb = 0.2
 elevators = 2
 floors = 6
 pg = PoissonGenerator(lamb, segs)
@@ -12,13 +12,13 @@ env = FloorsModel(elevators,floors,pg)
 
 i = 0
 
-while i < 36000 or len(env.peopleSimulator.people) > 0 or len(env.schedule.agents[0].peopleInside) > 0 or len(env.schedule.agents[1].peopleInside) > 0:
+while i < 3600 or len(env.peopleSimulator.people) > 0 or len(env.schedule.agents[0].peopleInside) > 0 or len(env.schedule.agents[1].peopleInside) > 0:
     #print("t =",i)
     env.step()
     #print("--------------------------")
     i += 1
 
-nGroup = int(segs*lamb/2)
+nGroup = int(segs*lamb/10)
 chunks = [env.timePeople[x:x+nGroup] for x in range(0,len(env.timePeople),nGroup)]
 Y = []
 for c in chunks:

@@ -98,7 +98,7 @@ class ElevatorAgent(Agent):
             dStops = 0
             a = self.model.schedule.agents[i]
             simulatedFloorsToGo = copy(self.floorsToGo)
-            position = self.model.currentState.positions[a.unique_id]
+            position = self.s.positions[a.unique_id]
 
             #print("(floor,sense):",(floorCall,senseCall),"Position[floorsToGO]:",position,simulatedFloorsToGo,"DoorOpened:",a.doorsOpened)
             # simulatedFloorsToGo = [5,2,0]
