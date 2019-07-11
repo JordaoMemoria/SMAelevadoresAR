@@ -8,7 +8,7 @@ from State import State
 
 class FloorsModel(Model):
 
-    def __init__(self, nElevators, nFloors, pg):
+    def __init__(self, nElevators, nFloors, pg, nTime):
         self.nElevators = nElevators
         self.nFloors = nFloors
         self.grid = MultiGrid(1, nFloors, False)
@@ -17,10 +17,16 @@ class FloorsModel(Model):
         self.ACTIONS = ['Go', 'Ignore']
 
         self.timePeople = []
-        self.accumulatedRewardOfAgents = []
+        self.rightChoices = []
+        self.wrongChoices = []
+
+        self.rightChoice = 0
+        self.wrongChoice = 0
+        self.t = 0
+        self.nTime = nTime
+
         p_elevators = []
         for i in range(self.nElevators):
-            self.accumulatedRewardOfAgents.append(0)
             a = ElevatorAgent(i, self)
             self.schedule.add(a)
             y = self.random.randrange(self.grid.height)
@@ -33,7 +39,13 @@ class FloorsModel(Model):
         self.moveSecond = True
 
     def step(self):
-
+        self.t += 1
+        if self.t == self.nTime:
+            self.rightChoices.append(self.rightChoice)
+            self.wrongChoices.append(self.wrongChoice)
+            self.rightChoice = 0
+            self.wrongChoice = 0
+            self.t = 0
 
 
         self.schedule.step()
@@ -66,10 +78,6 @@ class FloorsModel(Model):
         if self.currentState.GO[currentPosition][agent.unique_id] == 1:
             self.currentState.GO[currentPosition][agent.unique_id] = 0
             movedPeople = self.peopleSimulator.getPeopleByFloor(currentPosition)
-            if len(movedPeople) == 0:
-                self.accumulatedRewardOfAgents[agent.unique_id] += -1
-                #print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi punido com",-1)
-
             agent.peopleInside.extend(movedPeople)
             for p in movedPeople:
                 self.currentState.LEAVE[p.goTo][agent.unique_id] = 1
@@ -86,10 +94,6 @@ class FloorsModel(Model):
         if self.currentState.LEAVE[currentPosition][agent.unique_id] == 1:
             self.currentState.LEAVE[currentPosition][agent.unique_id] = 0
             peopleToGo = self.getPeopleByGoTo(agent,currentPosition)
-            for p in peopleToGo:
-                r = p.getReward()
-                self.accumulatedRewardOfAgents[agent.unique_id] += r
-                #print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi recompensado com",r)
             self.saveTimeByPeople(peopleToGo)
 
         agent.doorsOpened = False
@@ -115,17 +119,26 @@ class FloorsModel(Model):
             self.currentState.senses[agent.unique_id] = 0
 
     def getPerception(self, agent_id):
-        r = self.accumulatedRewardOfAgents[agent_id]
-        self.accumulatedRewardOfAgents[agent_id] = 0
-        return self.currentState, r
+        return self.currentState
 
-    def newAction(self,a,agent,button):
+    def newAction(self,action, agent, button, state):
         #print(a)
-        if a == 'Go':
+        if action == 'Go':
             self.currentState.GO[int((button+1)/2)][agent.unique_id] = 1
             agent.floorsToGo.append(int((button+1)/2))
             agent.floorsToGo = list(dict.fromkeys(agent.floorsToGo))
             self.peopleSimulator.setPeopleByFloorWithElevators(int((button+1)/2))
+
+        resp = agent.getD(state, button, agent)
+        if (resp == 1 and action == 'Go') or (resp == -1 and action == 'Ignore'):
+            self.rightChoice += 1
+            return 1
+        elif (resp == -1 and action == 'Go') or (resp == 1  and action == 'Ignore'):
+            self.wrongChoice += 1
+            return -1
+
+
+
 
     def getPeopleByGoTo(self,agent,goTo):
         peopleByGoTo = []

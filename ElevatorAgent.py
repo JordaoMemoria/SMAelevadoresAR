@@ -14,8 +14,9 @@ class ElevatorAgent(Agent):
 
         self.s = None
         self.a = None
+        self.r = None
 
-        self.w0 = 1
+        self.w0 = 0
         self.w1 = 1
 
         self.floorsToGo = []
@@ -47,15 +48,14 @@ class ElevatorAgent(Agent):
             return False
 
     def qlearningAction(self,button):
-        sl,rl = self.model.getPerception(self.unique_id)
-        #print("----------------------------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Agente",self.unique_id,rl)
+        sl = self.model.getPerception(self.unique_id)
         if self.s != None:
-            newQsa = self.Q(self.s,self.a, button) + 0.1*(rl + 0.9*self.getMaxVariantionValue(sl, button))
+            newQsa = self.Q(self.s,self.a, button) + 1*(self.r + 0*self.getMaxVariantionValue(sl, button))
             self.updateWeights(newQsa,button)
 
         self.s = deepcopy(sl)
         self.a = self.getAction(sl, button)
-        self.model.newAction(self.a,self,button)
+        self.r = self.model.newAction(self.a,self,button, self.s)
 
     def getMaxVariantionValue(self,sl, button):
         value = None
@@ -76,7 +76,7 @@ class ElevatorAgent(Agent):
             a = -1
 
         self.w0 += lr * (newQsa - self.Q(self.s, self.a, button))
-        self.w1 += lr * (newQsa - self.Q(self.s, self.a, button))*self.getD(self.s,button)*a
+        self.w1 += lr * (newQsa - self.Q(self.s, self.a, button))*self.getD(self.s,button,self)*a
         #print("Agent", self.unique_id, "w0:", self.w0, "w1:", self.w1)
 
     def Q(self,s,a, button):
@@ -85,24 +85,19 @@ class ElevatorAgent(Agent):
         elif a == 'Ignore':
             av = -1
 
-        D = self.getD(s,button)
+        D = self.getD(s,button, self)
 
-        return self.w1*D*av
+        return self.w0 + self.w1*D*av
 
-    def getD(self,s, button):
-        ds = [0]*self.s.GO.shape[1]
+    def getD(self,s, button, agent):
+        ds = [0]*(s.GO.shape[1])
         floorCall, senseCall = self.getFloorAndSenseOfButton(button)
-        #floorCall, senseCall = (5,-1)
         for i in range(self.s.GO.shape[1]):
             dFloors = 0
             dStops = 0
             a = self.model.schedule.agents[i]
-            simulatedFloorsToGo = copy(self.floorsToGo)
-            position = self.s.positions[a.unique_id]
-
-            #print("(floor,sense):",(floorCall,senseCall),"Position[floorsToGO]:",position,simulatedFloorsToGo,"DoorOpened:",a.doorsOpened)
-            # simulatedFloorsToGo = [5,2,0]
-            # position = 4
+            simulatedFloorsToGo = copy(a.floorsToGo)
+            position = s.positions[a.unique_id]
 
             sense = None
 
@@ -198,7 +193,7 @@ class ElevatorAgent(Agent):
                 min = j
                 value = ds[j]
 
-        if min == self.unique_id:
+        if min == agent.unique_id:
             return 1
         else:
             return -1
@@ -219,7 +214,7 @@ class ElevatorAgent(Agent):
         action_value = self.Q(sl, action, button)
 
         e = randint(1,10)
-        if e < 3:
+        if e <= 2:
             return action
         else:
             for a in self.model.ACTIONS:
