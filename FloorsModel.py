@@ -41,11 +41,13 @@ class FloorsModel(Model):
             self.updateState()
         else:
             self.moveSecond = True
-        print(self.schedule.agents[0].doorsOpened)
+        # print(self.schedule.agents[0].doorsOpened)
         print(self.currentState)
-        self.peopleSimulator.showPeople()
-        self.schedule.agents[0].showPeople()
-        self.schedule.agents[1].showPeople()
+        # self.peopleSimulator.showPeople()
+        # self.schedule.agents[0].showPeople()
+        # self.schedule.agents[1].showPeople()
+        print("Agent 0",self.schedule.agents[0].floorsToGo)
+        print("Agent 1",self.schedule.agents[1].floorsToGo)
 
     def updateState(self):
         for i in range(len(self.schedule.agents)-1):
@@ -62,7 +64,7 @@ class FloorsModel(Model):
             movedPeople = self.peopleSimulator.getPeopleByFloor(currentPosition)
             if len(movedPeople) == 0:
                 self.accumulatedRewardOfAgents[agent.unique_id] += -1
-                print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi punido com",-1)
+                # print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi punido com",-1)
 
             agent.peopleInside.extend(movedPeople)
             for p in movedPeople:
@@ -83,7 +85,7 @@ class FloorsModel(Model):
             for p in peopleToGo:
                 r = p.getReward()
                 self.accumulatedRewardOfAgents[agent.unique_id] += r
-                print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi recompensado com",r)
+                # print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi recompensado com",r)
             self.saveTimeByPeople(peopleToGo)
 
         agent.doorsOpened = False
