@@ -4,6 +4,7 @@ class Person:
         self.floor = floor
         self.goTo = goTo
         self.t = 0
+        self.elevatorsGoing = 0
 
     def wait(self,segs):
         self.t += segs
@@ -12,4 +13,4 @@ class Person:
         return '['+str(self.floor)+str(self.goTo)+']'
 
     def getReward(self):
-        return ((self.floor - self.goTo)**2)/self.t
+        return ((self.floor - self.goTo)**3)/self.t

@@ -4,6 +4,7 @@ from random import randint
 from copy import deepcopy, copy
 
 class ElevatorAgent(Agent):
+
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
 
@@ -14,8 +15,8 @@ class ElevatorAgent(Agent):
         self.s = None
         self.a = None
 
-        self.w0 = 0.1
-        self.w1 = 0.1
+        self.w0 = 1
+        self.w1 = 1
 
         self.floorsToGo = []
         self.doorsOpened = False
@@ -49,7 +50,8 @@ class ElevatorAgent(Agent):
         sl,rl = self.model.getPerception(self.unique_id)
         #print("----------------------------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Agente",self.unique_id,rl)
         if self.s != None:
-            newQsa = self.Q(self.s,self.a, button) + 0.9*(rl + 0.9*self.getMaxVariantionValue(sl, button))
+            newQsa = self.Q(self.s,self.a, button) + 0.1*(rl + 0.9*self.getMaxVariantionValue(sl, button))
+            self.updateWeights(newQsa,button)
 
         self.s = deepcopy(sl)
         self.a = self.getAction(sl, button)
@@ -65,26 +67,43 @@ class ElevatorAgent(Agent):
                 value = v
         return value
 
+    def updateWeights(self, newQsa, button):
+        lr = 0.4
+
+        if self.a == 'Go':
+            a = 1
+        else:
+            a = -1
+
+        self.w0 += lr * (newQsa - self.Q(self.s, self.a, button))
+        self.w1 += lr * (newQsa - self.Q(self.s, self.a, button))*self.getD(self.s,button)*a
+        #print("Agent", self.unique_id, "w0:", self.w0, "w1:", self.w1)
+
     def Q(self,s,a, button):
         if a == 'Go':
             av = 1
         elif a == 'Ignore':
             av = -1
 
-        D = self.getD(s, button)
+        D = self.getD(s,button)
 
-        return self.w0 + self.w1*D*av
+        return self.w1*D*av
 
     def getD(self,s, button):
         ds = [0]*self.s.GO.shape[1]
         floorCall, senseCall = self.getFloorAndSenseOfButton(button)
-        #floorCall, senseCall = (0,1)
+        #floorCall, senseCall = (5,-1)
         for i in range(self.s.GO.shape[1]):
             dFloors = 0
             dStops = 0
             a = self.model.schedule.agents[i]
             simulatedFloorsToGo = copy(self.floorsToGo)
             position = self.model.currentState.positions[a.unique_id]
+
+            #print("(floor,sense):",(floorCall,senseCall),"Position[floorsToGO]:",position,simulatedFloorsToGo,"DoorOpened:",a.doorsOpened)
+            # simulatedFloorsToGo = [5,2,0]
+            # position = 4
+
             sense = None
 
             if len(simulatedFloorsToGo) > 0:
@@ -100,6 +119,13 @@ class ElevatorAgent(Agent):
             else:
                 sense = 0
 
+            if a.doorsOpened:
+                if len(simulatedFloorsToGo) > 0 and simulatedFloorsToGo[0] == position:
+                    dFloors -= 1
+                elif floorCall == position:
+                    dFloors -= 1
+                if (position != floorCall and len(simulatedFloorsToGo) > 0 and simulatedFloorsToGo[0] != position) or (len(simulatedFloorsToGo) == 0 and position != floorCall):
+                    dFloors += 1
 
             while position != floorCall:
                 if position in simulatedFloorsToGo:
@@ -127,13 +153,17 @@ class ElevatorAgent(Agent):
                     dFloors += 1
             sense = 0
             dStops += 1
+
             if senseCall == 1:
-                simulatedFloorLeave = self.model.nFloors -1
+                simulatedFloorsToGo.append(self.model.nFloors -1)
             elif senseCall == -1:
-                simulatedFloorLeave = 0
-            while position != simulatedFloorLeave:
+                simulatedFloorsToGo.append(0)
+            simulatedFloorsToGo = list(dict.fromkeys(simulatedFloorsToGo))
+
+            while len(simulatedFloorsToGo) > 0:
                 if position in simulatedFloorsToGo:
-                    dStops += 1
+                    if simulatedFloorsToGo[0] != floorCall:
+                        dStops += 1
                     simulatedFloorsToGo.remove(position)
                     if len(simulatedFloorsToGo) > 0:
                         if position < simulatedFloorsToGo[0]:
@@ -148,10 +178,10 @@ class ElevatorAgent(Agent):
                     elif sense == -1:
                         position -= 1
                     elif sense == 0:
-                        if position > simulatedFloorLeave:
+                        if position > simulatedFloorsToGo[0]:
                             position -= 1
                             sense = -1
-                        elif position < simulatedFloorLeave:
+                        elif position < simulatedFloorsToGo[0]:
                             position += 1
                             sense = 1
                     dFloors += 1
@@ -160,8 +190,18 @@ class ElevatorAgent(Agent):
 
 
             ds[i] += dFloors + 2*dStops
-        print("Dists:",ds)
-        return 0
+        #print("Dists:", ds)
+        min = 0
+        value = ds[0]
+        for j in range(len(ds)):
+            if ds[j] < value:
+                min = j
+                value = ds[j]
+
+        if min == self.unique_id:
+            return 1
+        else:
+            return -1
 
     def getFloorAndSenseOfButton(self, button):
         floor = int((button+1)/2)
@@ -173,13 +213,13 @@ class ElevatorAgent(Agent):
 
     def getAction(self, sl, button):
 
-        #default_action = randint(0, len(self.model.ACTIONS)-1)
-        default_action = 0
+        default_action = randint(0, len(self.model.ACTIONS)-1)
+        #default_action = 0
         action = self.model.ACTIONS[default_action]
         action_value = self.Q(sl, action, button)
 
         e = randint(1,10)
-        if e < 11:
+        if e < 3:
             return action
         else:
             for a in self.model.ACTIONS:

@@ -18,7 +18,6 @@ class FloorsModel(Model):
 
         self.timePeople = []
         self.accumulatedRewardOfAgents = []
-
         p_elevators = []
         for i in range(self.nElevators):
             self.accumulatedRewardOfAgents.append(0)
@@ -34,20 +33,25 @@ class FloorsModel(Model):
         self.moveSecond = True
 
     def step(self):
+
+
+
         self.schedule.step()
         if self.moveSecond:
             self.moveSecond = False
-            print("Elevators acting")
+            #print("Elevators acting")
             self.updateState()
         else:
             self.moveSecond = True
-        # print(self.schedule.agents[0].doorsOpened)
-        print(self.currentState)
+
+        # print(self.schedule.agents[0].doorsOpened, self.schedule.agents[1].doorsOpened)
+        # print("Agent 0", self.schedule.agents[0].floorsToGo)
+        # print("Agent 1", self.schedule.agents[1].floorsToGo)
+        # print(self.currentState)
         # self.peopleSimulator.showPeople()
         # self.schedule.agents[0].showPeople()
         # self.schedule.agents[1].showPeople()
-        print("Agent 0",self.schedule.agents[0].floorsToGo)
-        print("Agent 1",self.schedule.agents[1].floorsToGo)
+
 
     def updateState(self):
         for i in range(len(self.schedule.agents)-1):
@@ -64,7 +68,7 @@ class FloorsModel(Model):
             movedPeople = self.peopleSimulator.getPeopleByFloor(currentPosition)
             if len(movedPeople) == 0:
                 self.accumulatedRewardOfAgents[agent.unique_id] += -1
-                # print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi punido com",-1)
+                #print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi punido com",-1)
 
             agent.peopleInside.extend(movedPeople)
             for p in movedPeople:
@@ -85,7 +89,7 @@ class FloorsModel(Model):
             for p in peopleToGo:
                 r = p.getReward()
                 self.accumulatedRewardOfAgents[agent.unique_id] += r
-                # print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi recompensado com",r)
+                #print("----------------------------------------->>>>>>>>>>>>     Agente", agent.unique_id, "foi recompensado com",r)
             self.saveTimeByPeople(peopleToGo)
 
         agent.doorsOpened = False
@@ -116,10 +120,12 @@ class FloorsModel(Model):
         return self.currentState, r
 
     def newAction(self,a,agent,button):
+        #print(a)
         if a == 'Go':
             self.currentState.GO[int((button+1)/2)][agent.unique_id] = 1
             agent.floorsToGo.append(int((button+1)/2))
             agent.floorsToGo = list(dict.fromkeys(agent.floorsToGo))
+            self.peopleSimulator.setPeopleByFloorWithElevators(int((button+1)/2))
 
     def getPeopleByGoTo(self,agent,goTo):
         peopleByGoTo = []
