@@ -121,7 +121,7 @@ class FloorsModel(Model):
     def getPerception(self, agent_id):
         return self.currentState
 
-    def newAction(self,action, agent, button, state):
+    def newAction(self,action, agent, button):
         #print(a)
         if action == 'Go':
             self.currentState.GO[int((button+1)/2)][agent.unique_id] = 1
@@ -129,13 +129,13 @@ class FloorsModel(Model):
             agent.floorsToGo = list(dict.fromkeys(agent.floorsToGo))
             self.peopleSimulator.setPeopleByFloorWithElevators(int((button+1)/2))
 
-        resp = agent.getD(state, button, agent)
-        if (resp == 1 and action == 'Go') or (resp == -1 and action == 'Ignore'):
-            self.rightChoice += 1
-            return 1
-        elif (resp == -1 and action == 'Go') or (resp == 1  and action == 'Ignore'):
-            self.wrongChoice += 1
-            return -1
+        # resp = agent.getD(state, button, agent)
+        # if (resp == 1 and action == 'Go') or (resp == -1 and action == 'Ignore'):
+        #     self.rightChoice += 1
+        #     return 1
+        # elif (resp == -1 and action == 'Go') or (resp == 1  and action == 'Ignore'):
+        #     self.wrongChoice += 1
+        #     return -1
 
 
 

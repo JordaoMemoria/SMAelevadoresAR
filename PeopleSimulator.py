@@ -25,7 +25,7 @@ class PeopleSimulator(Agent):
 
         nPeopleJustArrive = self.poissonGenerator.get_next_second()
         for i in range(nPeopleJustArrive):
-            p = self.upPeak()
+            p = self.ordinary()
             self.people.append(p)
             #print(" -------------->>>>>>>>>>>   People just arrive at floor", str(p))
             self.updateState(p,1)
@@ -48,22 +48,47 @@ class PeopleSimulator(Agent):
 
 
     def updateState(self,person, value):
-        if person.floor == 0:
-            self.model.currentState.buttons[0] = value
-            for a in self.agents:
-                a.idButtons.append(0)
-        elif person.floor == self.model.nFloors-1:
-            self.model.currentState.buttons[-1] = value
-            for a in self.agents:
-                a.idButtons.append(2*self.model.nFloors-3)
-        elif person.floor > person.goTo:
-            self.model.currentState.buttons[2*person.floor-1] = value
-            for a in self.agents:
-                a.idButtons.append(2*person.floor-1)
-        elif person.floor < person.goTo:
-            self.model.currentState.buttons[2*person.floor] = value
-            for a in self.agents:
-                a.idButtons.append(2*person.floor)
+
+        p = randint(1,10)
+        if p <= 7:
+            if person.floor == 0:
+                self.model.currentState.buttons[0] = value
+                for a in self.agents:
+                    a.idButtons.append(0)
+            elif person.floor == self.model.nFloors-1:
+                self.model.currentState.buttons[-1] = value
+                for a in self.agents:
+                    a.idButtons.append(2*self.model.nFloors-3)
+            elif person.floor > person.goTo:
+                self.model.currentState.buttons[2*person.floor-1] = value
+                for a in self.agents:
+                    a.idButtons.append(2*person.floor-1)
+            elif person.floor < person.goTo:
+                self.model.currentState.buttons[2*person.floor] = value
+                for a in self.agents:
+                    a.idButtons.append(2*person.floor)
+        else:
+            elevator_id = randint(0,len(self.agents)-1)
+            if person.floor == 0:
+                self.model.currentState.buttons[0] = value
+                for a in self.agents:
+                    if a.unique_id == elevator_id:
+                        a.idButtons.append(0)
+            elif person.floor == self.model.nFloors-1:
+                self.model.currentState.buttons[-1] = value
+                for a in self.agents:
+                    if a.unique_id == elevator_id:
+                        a.idButtons.append(2*self.model.nFloors-3)
+            elif person.floor > person.goTo:
+                self.model.currentState.buttons[2*person.floor-1] = value
+                for a in self.agents:
+                    if a.unique_id == elevator_id:
+                        a.idButtons.append(2*person.floor-1)
+            elif person.floor < person.goTo:
+                self.model.currentState.buttons[2*person.floor] = value
+                for a in self.agents:
+                    if a.unique_id == elevator_id:
+                        a.idButtons.append(2*person.floor)
 
     def sortGoTo(self,floor):
         goTo = randint(0,self.model.nFloors-1)
