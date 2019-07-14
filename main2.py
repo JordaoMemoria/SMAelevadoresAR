@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 Ys = []
 segs = 3600
-lamb = 0.2
+lamb = 0.5
 elevators = 2
 floors = 6
 pg = PoissonGenerator(lamb, segs)
@@ -32,7 +32,7 @@ for x in range(len(Y)):
 # R = []
 # for c in chunksRight:
 #     R.append(sum(c))
-
+#
 # W = []
 # for c in chunksRight:
 #     W.append(sum(c)/len(c))
@@ -45,6 +45,9 @@ print(Y)
 
 print(env.schedule.agents[0].w0,env.schedule.agents[0].w1)
 print(env.schedule.agents[1].w0,env.schedule.agents[1].w1)
+
+
+print(sum(env.timePeople)/len(env.timePeople))
 
 
 #print(R)

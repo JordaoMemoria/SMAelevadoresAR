@@ -25,11 +25,27 @@ class PeopleSimulator(Agent):
 
         nPeopleJustArrive = self.poissonGenerator.get_next_second()
         for i in range(nPeopleJustArrive):
-            newP = randint(0,self.model.nFloors-1)
-            p = Person(newP,self.sortGoTo(newP))
+            p = self.upPeak()
             self.people.append(p)
             #print(" -------------->>>>>>>>>>>   People just arrive at floor", str(p))
             self.updateState(p,1)
+
+
+    def ordinary(self):
+        newP = randint(0, self.model.nFloors - 1)
+        p = Person(newP, self.sortGoTo(newP))
+        return p
+
+    def downPeak(self):
+        newP = randint(1, self.model.nFloors - 1)
+        p = Person(newP, 0)
+        return p
+
+    def upPeak(self):
+        newP = randint(1, self.model.nFloors - 1)
+        p = Person(0,newP)
+        return p
+
 
     def updateState(self,person, value):
         if person.floor == 0:

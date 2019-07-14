@@ -50,7 +50,7 @@ class ElevatorAgent(Agent):
     def qlearningAction(self,button):
         sl = self.model.getPerception(self.unique_id)
         if self.s != None:
-            newQsa = self.Q(self.s,self.a, button) + 1*(self.r + 0*self.getMaxVariantionValue(sl, button))
+            newQsa = self.Q(self.s,self.a, button) + 1*(self.r + 0.1*self.getMaxVariantionValue(sl, button))
             self.updateWeights(newQsa,button)
 
         self.s = deepcopy(sl)
