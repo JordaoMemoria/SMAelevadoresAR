@@ -25,7 +25,7 @@ class PeopleSimulator(Agent):
 
         nPeopleJustArrive = self.poissonGenerator.get_next_second()
         for i in range(nPeopleJustArrive):
-            p = self.ordinary()
+            p = self.upPeak()
             self.people.append(p)
             #print(" -------------->>>>>>>>>>>   People just arrive at floor", str(p))
             self.updateState(p,1)
