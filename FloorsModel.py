@@ -16,7 +16,9 @@ class FloorsModel(Model):
 
         self.ACTIONS = ['Go', 'Ignore']
 
-        self.timePeople = []
+        self.timePeopleWait = []
+        self.timePeopleJourney = []
+        self.timeCrowding = []
         self.rightChoices = []
         self.wrongChoices = []
 
@@ -150,4 +152,5 @@ class FloorsModel(Model):
 
     def saveTimeByPeople(self,people):
         for p in people:
-            self.timePeople.append(p.t)
+            self.timePeopleWait.append(p.tWait)
+            self.timePeopleJourney.append(p.tJourney)

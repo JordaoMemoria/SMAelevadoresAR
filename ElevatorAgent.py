@@ -32,7 +32,7 @@ class ElevatorAgent(Agent):
 
     def updateTimePeople(self):
         for p in self.peopleInside:
-            p.wait(1)
+            p.journey(1)
 
     def step(self):
         self.updateTimePeople()

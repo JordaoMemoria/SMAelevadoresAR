@@ -23,11 +23,14 @@ class PeopleSimulator(Agent):
             if p.elevatorsGoing == 0:
                 self.updateState(p,1)
 
-        nPeopleJustArrive = self.poissonGenerator.get_next_second()
-        for i in range(nPeopleJustArrive):
+        (nPeopleJustArriveUp, nPeopleJustArriveDown) = self.poissonGenerator.get_next_second_up_down()
+        for i in range(nPeopleJustArriveUp):
             p = self.upPeak()
             self.people.append(p)
-            #print(" -------------->>>>>>>>>>>   People just arrive at floor", str(p))
+            self.updateState(p,1)
+        for i in range(nPeopleJustArriveDown):
+            p = self.downPeak()
+            self.people.append(p)
             self.updateState(p,1)
 
 
@@ -85,5 +88,9 @@ class PeopleSimulator(Agent):
                 p.elevatorsGoing += 1
 
     def updateTimePeople(self):
+        if len(self.people) > 0:
+            self.model.timeCrowding.append(1)
+        else:
+            self.model.timeCrowding.append(0)
         for p in self.people:
             p.wait(1)

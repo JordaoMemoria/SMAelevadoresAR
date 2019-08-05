@@ -5,61 +5,43 @@ import matplotlib.pyplot as plt
 Ys = []
 segs = 3600
 lamb = 0.5
-elevators = 2
-floors = 6
-pg = PoissonGenerator(lamb, segs)
-env = FloorsModel(elevators, floors, pg, segs/10)
+elevators = 4
+floors = 16
+T1 = [18,11,15,8,8,34,46,40,34,46,9,10,6,6,9]
+T2 = [17,17,13,13,10,34,31,26,41,38,13,12,14,8,12]
 
-i = 0
-
-while i < 3600 or len(env.peopleSimulator.people) > 0 or len(env.schedule.agents[0].peopleInside) > 0 or len(env.schedule.agents[1].peopleInside) > 0:
-    #print("t =",i)
-    env.step()
-    #print("--------------------------")
-    i += 1
-
-nGroup = int(segs*lamb/10)
-chunks = [env.timePeople[x:x+nGroup] for x in range(0,len(env.timePeople),nGroup)]
-
-Y = []
-for c in chunks:
-    Y.append(sum(c)/len(c))
-
-X = []
-for x in range(len(Y)):
-    X.append(x+1)
-
-# R = []
-# for c in chunksRight:
-#     R.append(sum(c))
-#
-# W = []
-# for c in chunksRight:
-#     W.append(sum(c)/len(c))
+T3Up = [0,1,2,2,0,2,2,0,2,0,1,2,1,0,0]
+T3Down = [7,10,7,9,12,10,8,8,10,18,11,6,12,2,15]
 
 
-
-print(env.rightChoices)
-print(env.wrongChoices)
-print(Y)
-
-print(env.schedule.agents[0].w0,env.schedule.agents[0].w1)
-print(env.schedule.agents[1].w0,env.schedule.agents[1].w1)
+pg = PoissonGenerator()
+pg.setUpDownOrder(T3Up, T3Down)
 
 
-print(sum(env.timePeople)/len(env.timePeople))
+tW = []
+tJ = []
+tC = []
 
+for j in range(10):
+    pg.reset()
+    env = FloorsModel(elevators, floors, pg, segs/10)
 
-#print(R)
-#print(W)
+    i = 0
+    while i < 900 or len(env.peopleSimulator.people) > 0 or len(env.schedule.agents[0].peopleInside) > 0 or len(env.schedule.agents[1].peopleInside) > 0 or len(env.schedule.agents[2].peopleInside) > 0 or len(env.schedule.agents[3].peopleInside) > 0:
+        #print("t =",i)
+        env.step()
+        #print("--------------------------")
+        i += 1
+    i = 0
 
-plt.plot(X,Y, label='TMS')
-#plt.plot([1,2,3,4,5,6,7,8,9,10],env.rightChoices, label='Right')
-#plt.plot([1,2,3,4,5,6,7,8,9,10],env.wrongChoices, label='Wrong')
-leg = plt.legend(loc='best')
-leg.get_frame().set_alpha(0.5)
+    print(env.timePeopleWait)
+    print(env.timePeopleJourney)
+    print(env.timeCrowding)
+    tW.append(sum(env.timePeopleWait)/len(env.timePeopleWait))
+    tJ.append(sum(env.timePeopleJourney)/len(env.timePeopleJourney))
+    tC.append(sum(env.timeCrowding)/len(env.timeCrowding)*100)
 
-plt.ylim((0,max(Y)+10))
+print('tW:',sum(tW)/len(tW))
+print('tJ:',sum(tJ)/len(tJ))
+print('tC:',sum(tC)/len(tC))
 
-
-plt.show()
